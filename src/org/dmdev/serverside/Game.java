@@ -1,11 +1,14 @@
 package org.dmdev.serverside;
 
 public class Game {
+import org.dmdev.serverside.InputSquare;
+
+	public class Game {
 		private PlayerHelper PHelper1 = null;
 		private PlayerHelper PHelper2 = null;
 
 		private PlayerHelper currentPlayer = null;
-		private BoardOwner board[]; // game board
+		private InputSquare board[]; // game board
 
 		public static final int VALID_MOVE = 1;
 		public static final int INVALID_MOVE = 2;
@@ -15,9 +18,9 @@ public class Game {
 
 		public Game() {
 
-			board = new BoardOwner[9];
+			board = new InputSquare[9];
 			for (int i = 0; i < 9; i++)
-				board[i] = new BoardOwner();
+				board[i] = new InputSquare();
 
 		}
 
@@ -65,7 +68,7 @@ public class Game {
 						board[location].MoveOrder = NoOfMove++;
 
 						// set new current player
-						currentPlayer = player.GetOpponent();
+						currentPlayer = player.getOpponent();
 
 						// call current player to record opponent move first
 						// (the one
@@ -83,6 +86,7 @@ public class Game {
 
 			} catch (Exception e) {
 				System.out.println("SYSTEM MSG: Error when validating move.");
+				e.printStackTrace();
 			}
 
 			return ReturnValue;
@@ -92,10 +96,12 @@ public class Game {
 		// validate name when user press submit
 		public synchronized boolean ValidateName(PlayerHelper Player, String InputName) {
 
-			if (Player.GetOpponent().GetName() == null || !Player.GetOpponent().GetName().equals(InputName)) {
+			if (Player.getOpponent().GetName() == null || !Player.getOpponent().GetName().equals(InputName)) {
 
 				Player.setPlayerName(InputName);
-				Player.GetOpponent().RecordOpponentName(InputName);
+        
+  			Player.getOpponent().RecordOpponentName(InputName);
+
 				return true;
 			} else
 				return false;
@@ -104,7 +110,7 @@ public class Game {
 
 		// send a move back request to the opponent
 		public synchronized void ValidateMoveBack(PlayerHelper Player) {
-			Player.GetOpponent().RequestMoveBack();
+			Player.getOpponent().RequestMoveBack();
 
 		}
 
@@ -120,11 +126,11 @@ public class Game {
 
 				// case 1: X move 1 step, O move 1 step,
 				// X make the request in his turn and O authorize it
-				if (currentPlayer == ResponsePlayer.GetOpponent()) {
+				if (currentPlayer == ResponsePlayer.getOpponent()) {
 
 					// modify server board
 					// remove O's last move
-					OLastMove = GetPlayerLastMove(currentPlayer.GetOpponent());
+					OLastMove = GetPlayerLastMove(currentPlayer.getOpponent());
 					RemoveMove(OLastMove);
 
 					// remove X's last move
@@ -134,11 +140,11 @@ public class Game {
 					// modify client's board
 					// do this again in client's program
 					// return the name of the requester
-					currentPlayer.GetOpponent().MoveBack(ResponsePlayer.GetOpponent().GetName(), OLastMove);
-					currentPlayer.GetOpponent().MoveBack(ResponsePlayer.GetOpponent().GetName(), XLastMove);
+					currentPlayer.getOpponent().MoveBack(ResponsePlayer.getOpponent().GetName(), OLastMove);
+					currentPlayer.getOpponent().MoveBack(ResponsePlayer.getOpponent().GetName(), XLastMove);
 
-					currentPlayer.MoveBack(ResponsePlayer.GetOpponent().GetName(), OLastMove);
-					currentPlayer.MoveBack(ResponsePlayer.GetOpponent().GetName(), XLastMove);
+					currentPlayer.MoveBack(ResponsePlayer.getOpponent().GetName(), OLastMove);
+					currentPlayer.MoveBack(ResponsePlayer.getOpponent().GetName(), XLastMove);
 
 					// current player remains currentplayer
 
@@ -150,23 +156,23 @@ public class Game {
 
 					// modify server board
 					// remove X's last move
-					XLastMove = GetPlayerLastMove(currentPlayer.GetOpponent());
+					XLastMove = GetPlayerLastMove(currentPlayer.getOpponent());
 					RemoveMove(XLastMove);
 
 					// modify client's board
 					// return the name of the requester
-					currentPlayer.GetOpponent().MoveBack(ResponsePlayer.GetOpponent().GetName(), XLastMove);
-					currentPlayer.MoveBack(ResponsePlayer.GetOpponent().GetName(), XLastMove);
+					currentPlayer.getOpponent().MoveBack(ResponsePlayer.getOpponent().GetName(), XLastMove);
+					currentPlayer.MoveBack(ResponsePlayer.getOpponent().GetName(), XLastMove);
 
 					// currentplayer change back to X
-					SuperSetCurrentPlayer(currentPlayer.GetOpponent());
+					SuperSetCurrentPlayer(currentPlayer.getOpponent());
 				}
 
 			} else {
 
 				// -1 means request not authorize
-				currentPlayer.MoveBack(ResponsePlayer.GetOpponent().GetName(), -1);
-				currentPlayer.GetOpponent().MoveBack(ResponsePlayer.GetOpponent().GetName(), -1);
+				currentPlayer.MoveBack(ResponsePlayer.getOpponent().GetName(), -1);
+				currentPlayer.getOpponent().MoveBack(ResponsePlayer.getOpponent().GetName(), -1);
 			}
 
 		}
@@ -214,25 +220,9 @@ public class Game {
 			currentPlayer = Player;
 		}
 
-		public boolean HaveWinner() {
+		public boolean checkForWinner() {
 			// check the owner of each box to see the winner
-
-			return (((board[0].player != null) && (board[0].player == board[1].player)
-					&& (board[1].player == board[2].player))
-					|| ((board[3].player != null) && (board[3].player == board[4].player)
-							&& (board[4].player == board[5].player))
-					|| ((board[6].player != null) && (board[6].player == board[7].player)
-							&& (board[7].player == board[8].player))
-					|| ((board[0].player != null) && (board[0].player == board[3].player)
-							&& (board[3].player == board[6].player))
-					|| ((board[1].player != null) && (board[1].player == board[4].player)
-							&& (board[4].player == board[7].player))
-					|| ((board[2].player != null) && (board[2].player == board[5].player)
-							&& (board[5].player == board[8].player))
-					|| ((board[0].player != null) && (board[0].player == board[4].player)
-							&& (board[4].player == board[8].player))
-					|| ((board[2].player != null) && (board[2].player == board[4].player)
-							&& (board[4].player == board[6].player)));
+			return new WinnerChecker(board).checkAll();
 		}
 
 		// check whether game is tie
@@ -246,7 +236,7 @@ public class Game {
 			}
 
 			// if board is full but still no winner, then tie
-			if ((BoardIsFull) && (HaveWinner() == false))
+			if ((BoardIsFull) && (checkForWinner() == false))
 				return true;
 			else
 				return false;
