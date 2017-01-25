@@ -1,8 +1,5 @@
 package org.dmdev.serverside;
 
-public class Game {
-import org.dmdev.serverside.InputSquare;
-
 	public class Game {
 		private PlayerHelper PHelper1 = null;
 		private PlayerHelper PHelper2 = null;
