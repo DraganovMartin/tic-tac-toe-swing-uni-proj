@@ -1,7 +1,7 @@
 package org.dmdev.serverside;
 
+public class Game {
 import org.dmdev.serverside.InputSquare;
-import org.dmdev.serverside.PlayerHelper;
 
 	public class Game {
 		private PlayerHelper PHelper1 = null;
@@ -99,7 +99,9 @@ import org.dmdev.serverside.PlayerHelper;
 			if (Player.getOpponent().GetName() == null || !Player.getOpponent().GetName().equals(InputName)) {
 
 				Player.setPlayerName(InputName);
-				Player.getOpponent().RecordOpponentName(InputName);
+        
+  			Player.getOpponent().RecordOpponentName(InputName);
+
 				return true;
 			} else
 				return false;

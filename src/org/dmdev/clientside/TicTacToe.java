@@ -2,43 +2,45 @@ package org.dmdev.clientside;
 
 import org.dmdev.serverside.Server;
 
-public class TicTacToe extends Thread {
-	private static boolean ServerReady = false;
-	private String Statistics[];
+import java.util.Scanner;
 
-	public TicTacToe(String AppType) throws Exception {
-		super(AppType);
+public class TicTacToe extends Thread {
+	private static boolean serverReady = false;
+	private String statistics[];
+
+	public TicTacToe(String appType) throws Exception {
+		super(appType);
 	}
 
 	// if the command is "java TicTacToe client IP", run this
-	public TicTacToe(String AppType, String TargetIp) throws Exception {
+	public TicTacToe(String appType, String targetIp) throws Exception {
 
-		int NoOfGames = 0;
-		String Name = null;
+		int noOfGames = 0;
+		String name = null;
 
-		Statistics = new String[1000];
+		statistics = new String[1000];
 		for (int i = 0; i < 1000; i++)
-			Statistics[i] = null;
+			statistics[i] = null;
 
-		if (AppType.toUpperCase().equals("CLIENT")) {
+		if (appType.toUpperCase().equals("CLIENT")) {
 
 			try {
 				while (true) {
-					Client TTTClient = new Client(TargetIp, Statistics, Name);
-					TTTClient.Play();
+					GUI gui = new GUI(targetIp, statistics, name);
+					gui.Play();
 
 					// if play again, playing history will be cleared,
 					// dispose old interface and start again
 
-					if (!TTTClient.lblStatus.getText().equals("Status: Server down! Game stopped.")) {
+					if (!gui.lblStatus.getText().equals("Status: Server down! Game stopped.")) {
 
 						// get the game result first no matter the player
 						// continues to play or not
-						Statistics[++NoOfGames] = TTTClient.GetGameResult();
-						Name = TTTClient.GetName();
+						statistics[++noOfGames] = gui.getGameResult();
+						name = gui.getPlayerName();
 
-						if (TTTClient.PlayAgain())
-							TTTClient.dispose();
+						if (gui.playAgain())
+							gui.dispose();
 						else
 							// not play again, the player can still read the
 							// play history
@@ -62,12 +64,12 @@ public class TicTacToe extends Thread {
 
 		if (Thread.currentThread().getName().equals("ServerThread")) {
 
-			if (!ServerReady) {
+			if (!serverReady) {
 
 				try {
 
-					ServerReady = true;
-					Server TTTServer = new Server();
+					serverReady = true;
+					Server server = new Server();
 
 				} catch (Exception e) {
 					System.err.println("SYSTEM MSG: Exception when starting server: " + e.toString());
@@ -76,32 +78,32 @@ public class TicTacToe extends Thread {
 
 		} else if (Thread.currentThread().getName().equals("ClientThread")) {
 			int NoOfGames = 0;
-			String Name = null;
+			String name = null;
 
-			Statistics = new String[1000];
+			statistics = new String[1000];
 			for (int i = 0; i < 1000; i++)
-				Statistics[i] = null;
+				statistics[i] = null;
 
 			try {
 
-				while (!ServerReady)
+				while (!serverReady)
 					sleep(100);
 
 				while (true) {
-					Client TTTClient = new Client("127.0.0.1", Statistics, Name);
-					TTTClient.Play();
+					GUI gui = new GUI("127.0.0.1", statistics, name);
+					gui.Play();
 
 					// get the game result first no matter the player continues
 					// to play or not
-					Statistics[++NoOfGames] = TTTClient.GetGameResult();
-					Name = TTTClient.GetName();
+					statistics[++NoOfGames] = gui.getGameResult();
+					name = gui.getPlayerName();
 
 					// if play again, playing history will be cleared,
 					// dispose old interface and start again
 
-					if (!TTTClient.lblStatus.getText().equals("Status: Server down! Game stopped.")) {
-						if (TTTClient.PlayAgain())
-							TTTClient.dispose();
+					if (!gui.lblStatus.getText().equals("Status: Server down! Game stopped.")) {
+						if (gui.playAgain())
+							gui.dispose();
 						else
 							// not play again, the player can still read the
 							// play history
@@ -119,19 +121,31 @@ public class TicTacToe extends Thread {
 
 	public static void main(String args[]) throws Exception {
 
-		if ((args.length == 1) && (args[0].toUpperCase().equals("SERVER"))) {
+		Scanner sc = new Scanner(System.in);
+		String answer;
+		System.out.print("Start server (Y/N) : ");
+		answer = sc.nextLine();
+		if(answer.equalsIgnoreCase("Y")){
+			// Starting server
+			TicTacToe serverThread = new TicTacToe("ServerThread");
+			// Starting GUI of the server
+			TicTacToe clientThread = new TicTacToe("ClientThread");
+			serverThread.start();
+			clientThread.start();
+		}
+		else {
+			System.out.println("Aborting !!!");
+			System.exit(2);
+		}
+		System.out.println("Start client (Y/N) : ");
+		answer = sc.nextLine();
 
-			TicTacToe ServerHandlerThread = new TicTacToe("ServerThread");
-			TicTacToe ClientHandlerThread = new TicTacToe("ClientThread");
-
-			ServerHandlerThread.start();
-			ClientHandlerThread.start();
-
-		} else if (args.length == 2) {
-			TicTacToe app = new TicTacToe(args[0], args[1]);
+		if (answer.equalsIgnoreCase("Y")) {
+			TicTacToe app = new TicTacToe("client", "localhost");
+			app.start();
 		} else {
-			System.out.println("Usage: java TicTacToe client|server [ipaddress].");
-
+			System.out.println("Aborting !!!");
+			System.exit(2);
 		}
 
 	}
