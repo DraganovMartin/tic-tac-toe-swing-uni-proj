@@ -371,7 +371,7 @@ public class Client extends JFrame {
 					lblYourSign.setIcon(MyIcon);
 					lblYourSign.repaint();
 
-				} else if (OptCode.equals("OPPNAM")) {
+				} else if (OptCode.equals(ClientStatus.OPPONENT_NAME)) {
 					OpponentName = Param;
 					OppName.setText(Param);
 					lblStatus.setText("Status: Your opponent is " + Param);
@@ -379,7 +379,7 @@ public class Client extends JFrame {
 					if (PlayerName != null)
 						GameStart = true;
 
-				} else if (OptCode.equals("NAMEOK")) {
+				} else if (OptCode.equals(ClientStatus.CLIENT_NAME)) {
 					// my name is ok
 
 					PlayerName = Param;

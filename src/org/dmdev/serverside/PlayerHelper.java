@@ -89,7 +89,7 @@ public class PlayerHelper extends Thread {
 				} else if (OptCode.equals("MYNAME")) {
 
 					if (game.ValidateName(this, Param) == true)
-						out.println("NAMEOK " + Param);
+						out.println(ClientStatus.CLIENT_NAME +" " + Param);
 					else
 						out.println("NAMENK");
 
@@ -156,7 +156,7 @@ public class PlayerHelper extends Thread {
 	}
 
 	public void RecordOpponentName(String InputName) {
-		out.println("OPPNAM " + InputName);
+		out.println(ClientStatus.OPPONENT_NAME + " " + InputName);
 	}
 
 	// other side request to move back
