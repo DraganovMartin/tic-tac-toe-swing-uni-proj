@@ -9,7 +9,7 @@ public class Server {
 	private Game game = new Game();
 	private ServerSocket serverSocket;
 	private static final int LISTEN_PORT = 1357;
-	private final char[] sign = { 'x', 'y' };
+	private final char[] signs = { 'x', 'o' };
 
 	public Server() throws Exception {
 
@@ -25,11 +25,12 @@ public class Server {
 		try {
 			int signNum = 0;
 			Socket player = null;
+			System.out.println("Listening on port " + LISTEN_PORT + "...");
 			while (!game.hasEnoughPlayers()) {
 				player = waitForPlayers();
 				// Every client's game is handled by the PlayerHelper thread
 				// The first player gets the x
-				PlayerHelper pHelper = new PlayerHelper(game, sign[signNum++], player);
+				PlayerHelper pHelper = new PlayerHelper(game, signs[signNum++], player);
 				game.AddPlayer(pHelper);
 
 				pHelper.start();
@@ -54,7 +55,7 @@ public class Server {
 		} finally {
 			try {
 				serverSocket.close();
-			} catch (IOException e) {
+			} catch (IOException err) {
 				System.out.println("Error: can not close connection to server");
 
 			}
@@ -66,10 +67,9 @@ public class Server {
 
 		// Listen for incoming connections
 		try {
-			System.out.println("Listening on port " + LISTEN_PORT + "...");
 
 			clientSocket = serverSocket.accept();
-		} catch (IOException e) {
+		} catch (IOException err) {
 			System.err.println("Error: Failed to connect with client!");
 			System.exit(1);
 		}

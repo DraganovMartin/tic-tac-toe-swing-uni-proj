@@ -8,7 +8,7 @@ import java.net.Socket;
 
 public class PlayerHelper extends Thread {
 	private PlayerHelper Opponent;
-	private PrintWriter out = null;
+	private PrintWriter toClient = null;
 	private BufferedReader in = null;
 	private Socket socket;
 
@@ -26,31 +26,31 @@ public class PlayerHelper extends Thread {
 
 			// Sets up client socket communication
 			socket = clientSocket;
-			out = new PrintWriter(clientSocket.getOutputStream(), true);
+			toClient = new PrintWriter(clientSocket.getOutputStream(), true);
 			in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
 
 			// first response to client after first connect
-			out.println(ClientStatus.CLIENT_CONNECTED);
-			out.println(ClientStatus.PLAYER_SIGN +' '+ sign);
+			toClient.println(ClientStatus.CLIENT_CONNECTED);
+			toClient.println(ClientStatus.PLAYER_SIGN +' '+ sign);
 		} catch (IOException e) {
 			System.out.println("SYSTEM MSG: Unable to start player thread.");
 		}
 
 	}
 
-	public PlayerHelper GetOpponent() {
+	public PlayerHelper getOpponent() {
 		return Opponent;
 	}
 
 	public void SetOpponent(PlayerHelper NewPlayer) {
 		Opponent = NewPlayer;
-		out.println(ClientStatus.OPPONENT_CONNECTED);
+		toClient.println(ClientStatus.OPPONENT_CONNECTED);
 
 	}
 
 	// thread started to listen to client's command
 	public void run() {
-		String Command = null; // command = optcode + param
+		String commnad = null; // command = optcode + param
 		String OptCode = null;
 		String Param = null;
 
@@ -58,10 +58,10 @@ public class PlayerHelper extends Thread {
 
 			while (!GameOver) {
 
-				Command = in.readLine();
-				if (Command != null) {
-					OptCode = Command.substring(0, 6);
-					Param = Command.substring(6).trim();
+				commnad = in.readLine();
+				if (commnad != null) {
+					OptCode = commnad.substring(0, 6);
+					Param = commnad.substring(6).trim();
 				}
 
 				if (OptCode.equals("MOVETO")) {
@@ -74,24 +74,24 @@ public class PlayerHelper extends Thread {
 					// client wants to move, so go to the game to
 					// validate that move
 					if (game.ValidateMove(this, Integer.parseInt(Param)) == Game.VALID_MOVE) {
-						out.println("MOVEOK " + Param);
+						toClient.println("MOVEOK " + Param);
 
-						if (game.HaveWinner())
-							out.println("YOUWIN");
+						if (game.checkForWinner())
+							toClient.println("YOUWIN");
 						else if (game.Tie())
-							out.println("GAMTIE");
+							toClient.println("GAMTIE");
 
 					} else if (game.ValidateMove(this, Integer.parseInt(Param)) == Game.INVALID_MOVE)
-						out.println("MOVENK");
+						toClient.println("MOVENK");
 					else if (game.ValidateMove(this, Integer.parseInt(Param)) == Game.NOT_YOUR_TURN)
-						out.println("NOTTRN");
+						toClient.println("NOTTRN");
 
 				} else if (OptCode.equals("MYNAME")) {
 
 					if (game.ValidateName(this, Param) == true)
-						out.println(ClientStatus.CLIENT_NAME +" " + Param);
+						toClient.println(ClientStatus.CLIENT_NAME +" " + Param);
 					else
-						out.println("NAMENK");
+						toClient.println("NAMENK");
 
 				}
 				// request move back
@@ -132,36 +132,41 @@ public class PlayerHelper extends Thread {
 	}
 
 	public void RecordOpponentDead() {
-		out.println("OPDEAD");
+		toClient.println("OPDEAD");
 	}
 
-	public void RecordOpponentMove(int Loc) {
+	public void RecordOpponentMove(int location) {
 		// call this player to record opponent move
-		out.println("OPPMOV " + Loc);
+		toClient.println("OPPMOV " + location);
 
-		if (game.HaveWinner())
-			out.println("YOULSE");
+		if (game.checkForWinner())
+			toClient.println("YOULSE");
 		else if (game.Tie())
-			out.println("GAMTIE");
+			toClient.println("GAMTIE");
 	}
 
 	public String GetName() {
 		return MyName;
 	}
+	
+	public char getSign(){
+		return sign;
+	}
+	
 
-	public void SetName(String InputName) {
+	public void setPlayerName(String InputName) {
 
 		MyName = InputName;
 
 	}
 
 	public void RecordOpponentName(String InputName) {
-		out.println(ClientStatus.OPPONENT_NAME + " " + InputName);
+		toClient.println(ClientStatus.OPPONENT_NAME + " " + InputName);
 	}
 
 	// other side request to move back
 	public void RequestMoveBack() {
-		out.println("OPPREQ");
+		toClient.println("OPPREQ");
 	}
 
 	// announce result of moveback request
@@ -170,9 +175,9 @@ public class PlayerHelper extends Thread {
 	public void MoveBack(String Requester, int Location) {
 		if (Location == -1)
 			// not authorize
-			out.println("REQRES NK " + "0" + Requester);
+			toClient.println("REQRES NK " + "0" + Requester);
 		else
-			out.println("REQRES OK " + Location + Requester);
+			toClient.println("REQRES OK " + Location + Requester);
 
 	}
 
