@@ -7,82 +7,82 @@ import org.dmdev.serverside.PlayerHelper;
 		private PlayerHelper PHelper1 = null;
 		private PlayerHelper PHelper2 = null;
 
-		private PlayerHelper CurrentPlayer = null;
-		private BoardOwner Board[]; // game board
+		private PlayerHelper currentPlayer = null;
+		private BoardOwner board[]; // game board
 
-		public static final int VALIDMOVE = 1;
-		public static final int INVALIDMOVE = 2;
-		public static final int NOTYOURTURN = 3;
+		public static final int VALID_MOVE = 1;
+		public static final int INVALID_MOVE = 2;
+		public static final int NOT_YOUR_TURN = 3;
 
 		private int NoOfMove = 0;
 
 		public Game() {
 
-			Board = new BoardOwner[9];
+			board = new BoardOwner[9];
 			for (int i = 0; i < 9; i++)
-				Board[i] = new BoardOwner();
+				board[i] = new BoardOwner();
 
 		}
 
-		public void AddPlayer(PlayerHelper NewPlayer) {
+		public void AddPlayer(PlayerHelper player) {
 			if (PHelper1 == null)
-				PHelper1 = NewPlayer;
+				PHelper1 = player;
 			else
-				PHelper2 = NewPlayer;
+				PHelper2 = player;
 		}
 
-		public void SetOpponent() {
+		public void setOpponent() {
 			PHelper1.SetOpponent(PHelper2);
 			PHelper2.SetOpponent(PHelper1);
 
 		}
 
-		public boolean isFull() {
+		public boolean hasEnoughPlayers() {
 			return ((PHelper1 != null) && (PHelper2 != null));
 		}
 
-		public PlayerHelper GetPlayer1() {
+		public PlayerHelper getFirstPlayer() {
 			return PHelper1;
 
 		}
 
-		public PlayerHelper GetPlayer2() {
+		public PlayerHelper getSecondPlayer() {
 			return PHelper2;
 		}
 
 		// both players own the game object, so we use this as the
 		// monitor
-		public synchronized int ValidateMove(PlayerHelper Player, int Location) {
+		public synchronized int ValidateMove(PlayerHelper player, int location) {
 
-			int ReturnValue = INVALIDMOVE;
+			int ReturnValue = INVALID_MOVE;
 
 			try {
 
-				if (Player == CurrentPlayer) {
+				if (player == currentPlayer) {
 
 					// if nobody choose that location
-					if (Board[Location].Player == null) {
+					if (board[location].player == null) {
 
 						// assign board location and move order
-						Board[Location].Player = Player;
-						Board[Location].MoveOrder = NoOfMove++;
+						board[location].player = player;
+						board[location].MoveOrder = NoOfMove++;
 
 						// set new current player
-						CurrentPlayer = Player.GetOpponent();
+						currentPlayer = player.GetOpponent();
 
 						// call current player to record opponent move first
 						// (the one
 						// we have just processed above) before he moves
-						CurrentPlayer.RecordOpponentMove(Location);
+						currentPlayer.RecordOpponentMove(location);
 
 						// notify the other waiting player he can move now
-						ReturnValue = VALIDMOVE;
+						ReturnValue = VALID_MOVE;
 
 					} else
-						ReturnValue = INVALIDMOVE;
+						ReturnValue = INVALID_MOVE;
 				} else
 					// not his turn
-					ReturnValue = NOTYOURTURN;
+					ReturnValue = NOT_YOUR_TURN;
 
 			} catch (Exception e) {
 				System.out.println("SYSTEM MSG: Error when validating move.");
@@ -123,25 +123,25 @@ import org.dmdev.serverside.PlayerHelper;
 
 				// case 1: X move 1 step, O move 1 step,
 				// X make the request in his turn and O authorize it
-				if (CurrentPlayer == ResponsePlayer.GetOpponent()) {
+				if (currentPlayer == ResponsePlayer.GetOpponent()) {
 
 					// modify server board
 					// remove O's last move
-					OLastMove = GetPlayerLastMove(CurrentPlayer.GetOpponent());
+					OLastMove = GetPlayerLastMove(currentPlayer.GetOpponent());
 					RemoveMove(OLastMove);
 
 					// remove X's last move
-					XLastMove = GetPlayerLastMove(CurrentPlayer);
+					XLastMove = GetPlayerLastMove(currentPlayer);
 					RemoveMove(XLastMove);
 
 					// modify client's board
 					// do this again in client's program
 					// return the name of the requester
-					CurrentPlayer.GetOpponent().MoveBack(ResponsePlayer.GetOpponent().GetName(), OLastMove);
-					CurrentPlayer.GetOpponent().MoveBack(ResponsePlayer.GetOpponent().GetName(), XLastMove);
+					currentPlayer.GetOpponent().MoveBack(ResponsePlayer.GetOpponent().GetName(), OLastMove);
+					currentPlayer.GetOpponent().MoveBack(ResponsePlayer.GetOpponent().GetName(), XLastMove);
 
-					CurrentPlayer.MoveBack(ResponsePlayer.GetOpponent().GetName(), OLastMove);
-					CurrentPlayer.MoveBack(ResponsePlayer.GetOpponent().GetName(), XLastMove);
+					currentPlayer.MoveBack(ResponsePlayer.GetOpponent().GetName(), OLastMove);
+					currentPlayer.MoveBack(ResponsePlayer.GetOpponent().GetName(), XLastMove);
 
 					// current player remains currentplayer
 
@@ -153,31 +153,31 @@ import org.dmdev.serverside.PlayerHelper;
 
 					// modify server board
 					// remove X's last move
-					XLastMove = GetPlayerLastMove(CurrentPlayer.GetOpponent());
+					XLastMove = GetPlayerLastMove(currentPlayer.GetOpponent());
 					RemoveMove(XLastMove);
 
 					// modify client's board
 					// return the name of the requester
-					CurrentPlayer.GetOpponent().MoveBack(ResponsePlayer.GetOpponent().GetName(), XLastMove);
-					CurrentPlayer.MoveBack(ResponsePlayer.GetOpponent().GetName(), XLastMove);
+					currentPlayer.GetOpponent().MoveBack(ResponsePlayer.GetOpponent().GetName(), XLastMove);
+					currentPlayer.MoveBack(ResponsePlayer.GetOpponent().GetName(), XLastMove);
 
 					// currentplayer change back to X
-					SuperSetCurrentPlayer(CurrentPlayer.GetOpponent());
+					SuperSetCurrentPlayer(currentPlayer.GetOpponent());
 				}
 
 			} else {
 
 				// -1 means request not authorize
-				CurrentPlayer.MoveBack(ResponsePlayer.GetOpponent().GetName(), -1);
-				CurrentPlayer.GetOpponent().MoveBack(ResponsePlayer.GetOpponent().GetName(), -1);
+				currentPlayer.MoveBack(ResponsePlayer.GetOpponent().GetName(), -1);
+				currentPlayer.GetOpponent().MoveBack(ResponsePlayer.GetOpponent().GetName(), -1);
 			}
 
 		}
 
 		// delete a move from the game board
 		public void RemoveMove(int Location) {
-			Board[Location].Player = null;
-			Board[Location].MoveOrder = -1;
+			board[Location].player = null;
+			board[Location].MoveOrder = -1;
 
 			NoOfMove--;
 		}
@@ -188,10 +188,10 @@ import org.dmdev.serverside.PlayerHelper;
 			int LastMove = -1;
 
 			for (int i = 0; i < 9; i++) {
-				if (Board[i].Player == Player) {
+				if (board[i].player == Player) {
 
-					if (Board[i].MoveOrder > MaxMoveOrder) {
-						MaxMoveOrder = Board[i].MoveOrder;
+					if (board[i].MoveOrder > MaxMoveOrder) {
+						MaxMoveOrder = board[i].MoveOrder;
 						LastMove = i;
 					}
 
@@ -203,39 +203,39 @@ import org.dmdev.serverside.PlayerHelper;
 		}
 
 		public PlayerHelper GetCurrentPlayer() {
-			return CurrentPlayer;
+			return currentPlayer;
 		}
 
 		public synchronized void SetCurrentPlayer(PlayerHelper Player) {
-			if (CurrentPlayer == null)
-				CurrentPlayer = Player;
+			if (currentPlayer == null)
+				currentPlayer = Player;
 		}
 
 		public void SuperSetCurrentPlayer(PlayerHelper Player) {
 			// use in requesting move back 1 step
 
-			CurrentPlayer = Player;
+			currentPlayer = Player;
 		}
 
 		public boolean HaveWinner() {
 			// check the owner of each box to see the winner
 
-			return (((Board[0].Player != null) && (Board[0].Player == Board[1].Player)
-					&& (Board[1].Player == Board[2].Player))
-					|| ((Board[3].Player != null) && (Board[3].Player == Board[4].Player)
-							&& (Board[4].Player == Board[5].Player))
-					|| ((Board[6].Player != null) && (Board[6].Player == Board[7].Player)
-							&& (Board[7].Player == Board[8].Player))
-					|| ((Board[0].Player != null) && (Board[0].Player == Board[3].Player)
-							&& (Board[3].Player == Board[6].Player))
-					|| ((Board[1].Player != null) && (Board[1].Player == Board[4].Player)
-							&& (Board[4].Player == Board[7].Player))
-					|| ((Board[2].Player != null) && (Board[2].Player == Board[5].Player)
-							&& (Board[5].Player == Board[8].Player))
-					|| ((Board[0].Player != null) && (Board[0].Player == Board[4].Player)
-							&& (Board[4].Player == Board[8].Player))
-					|| ((Board[2].Player != null) && (Board[2].Player == Board[4].Player)
-							&& (Board[4].Player == Board[6].Player)));
+			return (((board[0].player != null) && (board[0].player == board[1].player)
+					&& (board[1].player == board[2].player))
+					|| ((board[3].player != null) && (board[3].player == board[4].player)
+							&& (board[4].player == board[5].player))
+					|| ((board[6].player != null) && (board[6].player == board[7].player)
+							&& (board[7].player == board[8].player))
+					|| ((board[0].player != null) && (board[0].player == board[3].player)
+							&& (board[3].player == board[6].player))
+					|| ((board[1].player != null) && (board[1].player == board[4].player)
+							&& (board[4].player == board[7].player))
+					|| ((board[2].player != null) && (board[2].player == board[5].player)
+							&& (board[5].player == board[8].player))
+					|| ((board[0].player != null) && (board[0].player == board[4].player)
+							&& (board[4].player == board[8].player))
+					|| ((board[2].player != null) && (board[2].player == board[4].player)
+							&& (board[4].player == board[6].player)));
 		}
 
 		// check whether game is tie
@@ -244,7 +244,7 @@ import org.dmdev.serverside.PlayerHelper;
 
 			for (int i = 0; i < 9; i++) {
 				// if one of the board is null, then not full -> not tie
-				if (Board[i].Player == null)
+				if (board[i].player == null)
 					BoardIsFull = false;
 			}
 

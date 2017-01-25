@@ -17,23 +17,21 @@ public class PlayerHelper extends Thread {
 	private String MyName;
 	private boolean GameOver = false;
 
-	public PlayerHelper(Game gm, char tempsign, Socket clientSocket) throws Exception {
+	public PlayerHelper(Game game, char playerSign, Socket clientSocket) throws Exception {
 
-		game = gm;
-		sign = tempsign;
+		this.game = game;
+		sign = playerSign;
 
 		try {
 
-			// client connects and we setup clientsocket to communicate
-			// with client
+			// Sets up client socket communication
 			socket = clientSocket;
 			out = new PrintWriter(clientSocket.getOutputStream(), true);
 			in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
 
 			// first response to client after first connect
-			out.println("WELCOM");
-			out.println("YRSIGN " + sign);
-			out.flush();
+			out.println(ClientStatus.CLIENT_CONNECTED);
+			out.println(ClientStatus.PLAYER_SIGN +' '+ sign);
 		} catch (IOException e) {
 			System.out.println("SYSTEM MSG: Unable to start player thread.");
 		}
@@ -46,7 +44,7 @@ public class PlayerHelper extends Thread {
 
 	public void SetOpponent(PlayerHelper NewPlayer) {
 		Opponent = NewPlayer;
-		out.println("OPPARR");
+		out.println(ClientStatus.OPPONENT_CONNECTED);
 
 	}
 
@@ -75,7 +73,7 @@ public class PlayerHelper extends Thread {
 
 					// client wants to move, so go to the game to
 					// validate that move
-					if (game.ValidateMove(this, Integer.parseInt(Param)) == game.VALIDMOVE) {
+					if (game.ValidateMove(this, Integer.parseInt(Param)) == Game.VALID_MOVE) {
 						out.println("MOVEOK " + Param);
 
 						if (game.HaveWinner())
@@ -83,9 +81,9 @@ public class PlayerHelper extends Thread {
 						else if (game.Tie())
 							out.println("GAMTIE");
 
-					} else if (game.ValidateMove(this, Integer.parseInt(Param)) == game.INVALIDMOVE)
+					} else if (game.ValidateMove(this, Integer.parseInt(Param)) == Game.INVALID_MOVE)
 						out.println("MOVENK");
-					else if (game.ValidateMove(this, Integer.parseInt(Param)) == game.NOTYOURTURN)
+					else if (game.ValidateMove(this, Integer.parseInt(Param)) == Game.NOT_YOUR_TURN)
 						out.println("NOTTRN");
 
 				} else if (OptCode.equals("MYNAME")) {

@@ -29,6 +29,8 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
+import org.dmdev.serverside.ClientStatus;
+
 public class Client extends JFrame {
 	private static final long serialVersionUID = -6713206219193321399L;
 	private JPanel buttonPanel;
@@ -67,6 +69,7 @@ public class Client extends JFrame {
 	private boolean GameOver = false;
 	private boolean GameStart = false;
 	private boolean OppArrived = false;
+	private boolean isSessionFull=false;
 	private String Sign;
 	private ImageIcon MyIcon;
 	private ImageIcon OppIcon;
@@ -101,6 +104,9 @@ public class Client extends JFrame {
 			TTTSocket = new Socket(TargetIp, 1357);
 			out = new PrintWriter(TTTSocket.getOutputStream(), true);
 			in = new BufferedReader(new InputStreamReader(TTTSocket.getInputStream()));
+//			if(in.readLine().equalsIgnoreCase("Session full")){
+//				
+//			}
 		} catch (UnknownHostException e) {
 			System.err.println("SYSTEM MSG: Unknown host:" + TargetIp);
 			System.exit(1);
@@ -330,21 +336,25 @@ public class Client extends JFrame {
 
 			while (!GameOver) {
 				ServerResponse = in.readLine();
-				OptCode = ServerResponse.substring(0, 6);
-				Param = ServerResponse.substring(6).trim();
+				if(-1 == ServerResponse.indexOf(' ')){
+					OptCode = ServerResponse;
+				}else{
+					OptCode = ServerResponse.substring(0,ServerResponse.indexOf(' '));
+					Param = ServerResponse.substring(ServerResponse.indexOf(' ')).trim();
+				}
 
-				if (OptCode.equals("WELCOM")) {
-					lblStatus.setText("Status: CONNECTED, waiting for your opponent...");
+				if (OptCode.equals(ClientStatus.CLIENT_CONNECTED)) {
+					lblStatus.setText("Status: You are onlie, please wait for your opponent...");
 
 				}
 				// opponent has arrived
-				else if (OptCode.equals("OPPARR")) {
+				else if (OptCode.equals(ClientStatus.OPPONENT_CONNECTED)) {
 					lblStatus
 							.setText("Status: Another player has connected, please submit your name to start the game");
 					OppArrived = true;
 				}
 				// your sign
-				else if (OptCode.equals("YRSIGN")) {
+				else if (OptCode.equals(ClientStatus.PLAYER_SIGN)) {
 
 					Sign = Param;
 
