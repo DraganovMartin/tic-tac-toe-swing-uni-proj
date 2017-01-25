@@ -86,7 +86,7 @@ import org.dmdev.serverside.PlayerHelper;
 
 			} catch (Exception e) {
 				System.out.println("SYSTEM MSG: Error when validating move.");
-				System.err.println(e.getMessage());
+				e.printStackTrace();
 			}
 
 			return ReturnValue;

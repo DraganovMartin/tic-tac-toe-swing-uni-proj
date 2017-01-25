@@ -10,7 +10,7 @@ public class WinnerChecker {
 	public boolean checkRows(){
 		for (int i = 0; i <3; i++) {
 			if((board[i].player != null) && (board[i].player == board[i+1].player)
-					&& (board[i+1].player.getSign() == board[1+2].player.getSign())){
+					&& (board[i+1].player == board[i+2].player)){
 				return true;
 			}
 		}
