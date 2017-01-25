@@ -7,7 +7,7 @@ import java.io.PrintWriter;
 import java.net.Socket;
 
 public class PlayerHelper extends Thread {
-	private PlayerHelper Opponent;
+	private PlayerHelper opponent;
 	private PrintWriter toClient = null;
 	private BufferedReader in = null;
 	private Socket socket;
@@ -39,11 +39,11 @@ public class PlayerHelper extends Thread {
 	}
 
 	public PlayerHelper getOpponent() {
-		return Opponent;
+		return opponent;
 	}
 
 	public void SetOpponent(PlayerHelper NewPlayer) {
-		Opponent = NewPlayer;
+		opponent = NewPlayer;
 		toClient.println(ClientStatus.OPPONENT_CONNECTED);
 
 	}
@@ -117,7 +117,7 @@ public class PlayerHelper extends Thread {
 		} catch (IOException e) {
 			System.out.println(
 					"SYSTEM MSG: Player " + (MyName == null ? "No Name" : MyName) + " has disconnected, game stopped.");
-			Opponent.RecordOpponentDead();
+			opponent.RecordOpponentDead();
 
 		} finally {
 

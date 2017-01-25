@@ -21,7 +21,7 @@ public class WinnerChecker {
 	public boolean checkColumns(){
 		for (int i = 0; i <3; i++) {
 			if((board[i].player != null) && (board[i].player == board[i+3].player)
-					&& (board[i+3].player == board[1+3+3].player)){
+					&& (board[i+3].player == board[i+3+3].player)){
 				return true;
 			}
 		}
