@@ -165,7 +165,7 @@ public class GUI extends JFrame {
 				if (oppArrived) {
 					if (!txtPlayerName.getText().isEmpty()) {
 						// send your name to the server to check
-						toServer.println("MYNAME " + txtPlayerName.getText());
+						toServer.println(ClientStatus.CLIENT_NAME + " " + txtPlayerName.getText());
 					} else
 						showErrMessageDialog("Please enter your name before pressing Submit",
 								"TicTacToe Error Message");
@@ -459,7 +459,7 @@ public class GUI extends JFrame {
 						deleteMoveFromHistory(location);
 
 						// repaint all square
-						// cos user may be reviewing history while he is making
+						// cause user may be reviewing history while he is making
 						// request
 						cleanAndRepaint();
 
