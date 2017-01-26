@@ -13,7 +13,7 @@ public class Server {
 
 	public Server() throws Exception {
 
-		// Setup socket
+		// Sets up the server socket
 		try {
 			serverSocket = new ServerSocket(LISTEN_PORT);
 
@@ -30,7 +30,7 @@ public class Server {
 				player = waitForPlayers();
 				// Every client's game is handled by the PlayerHelper thread
 				// The first player gets the x
-				PlayerHelper pHelper = new PlayerHelper(game, signs[signNum++], player);
+				WorkerThread pHelper = new WorkerThread(game, signs[signNum++], player);
 				game.AddPlayer(pHelper);
 
 				pHelper.start();
@@ -62,6 +62,10 @@ public class Server {
 		}
 	}
 
+	/**
+	 * Accepts client connections
+	 * @return the client socket
+	 */
 	public Socket waitForPlayers() {
 		Socket clientSocket = null;
 
