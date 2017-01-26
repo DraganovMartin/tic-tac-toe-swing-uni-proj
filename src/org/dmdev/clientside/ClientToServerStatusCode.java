@@ -1,7 +1,7 @@
 package org.dmdev.clientside;
 
 /**
- * Created by DevM on 1/26/2017.
+ *  @authors Marto,Dimcho
  */
 public abstract class ClientToServerStatusCode {
     public static final String SEND_MOVE = "MOVETO";

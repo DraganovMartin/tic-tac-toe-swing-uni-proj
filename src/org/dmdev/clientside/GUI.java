@@ -1,3 +1,6 @@
+/**
+ *  @author Marto
+ */
 package org.dmdev.clientside;
 
 import java.awt.BorderLayout;
@@ -165,7 +168,7 @@ public class GUI extends JFrame {
 				if (oppArrived) {
 					if (!txtPlayerName.getText().isEmpty()) {
 						// send your name to the server to check
-						toServer.println(ClientStatus.CLIENT_NAME + " " + txtPlayerName.getText());
+						toServer.println(ServerToClientStatusCodes.CLIENT_NAME + " " + txtPlayerName.getText());
 					} else
 						showErrMessageDialog("Please enter your name before pressing Submit",
 								"TicTacToe Error Message");
@@ -325,7 +328,7 @@ public class GUI extends JFrame {
 		setVisible(true);
 	}
 
-	// client listen to server (PlayerHelper) response
+	// client listen to server (WorkerThread) response
 	public void Play() throws Exception {
 		String serverResponse = null;
 		String OptionCode = null;
@@ -369,7 +372,7 @@ public class GUI extends JFrame {
 					lblYourSign.setIcon(myIcon);
 					lblYourSign.repaint();
 
-				} else if (OptionCode.equals("OPPNAM")) {
+				} else if (OptionCode.equals(ServerToClientStatusCodes.OPPONENT_NAME)) {
 					opponentName = parameter;
 					oppName.setText(parameter);
 					lblStatus.setText("Status: Your opponent is " + parameter);
@@ -377,7 +380,7 @@ public class GUI extends JFrame {
 					if (playerName != null)
 						gameStart = true;
 
-				} else if (OptionCode.equals("NAMEOK")) {			// my name is not like the opponent's
+				} else if (OptionCode.equals(ServerToClientStatusCodes.NAME_OKEY)) {			// my name is not like the opponent's
 
 					playerName = parameter;
 					myName.setText(parameter);
@@ -391,12 +394,12 @@ public class GUI extends JFrame {
 
 				}
 				// name not ok
-				else if (OptionCode.equals("NAMENK")) {
+				else if (OptionCode.equals(ServerToClientStatusCodes.NAME_NOT_OKEY)) {
 
 					showErrMessageDialog("Status: You name is already chosen by the opponent, please choose another",
 							"TicTacToe Error Message");
 
-				} else if (OptionCode.equals("MOVEOK")) {
+				} else if (OptionCode.equals(ServerToClientStatusCodes.MOVE_ACCEPTED)) {
 
 					lblStatus.setText("Status: Waiting for opponent to move..");
 					myTurn.setIcon(null);
@@ -412,10 +415,10 @@ public class GUI extends JFrame {
 
 				}
 
-				else if (OptionCode.equals("MOVENK")) {		// u can move again, choose another correct square
+				else if (OptionCode.equals(ServerToClientStatusCodes.MOVE_NOT_OKEY)) {		// u can move again, choose another correct square
 
 					lblStatus.setText("Status: This square is already occupied, please choose another");
-				} else if (OptionCode.equals("OPPMOV")) {
+				} else if (OptionCode.equals(ServerToClientStatusCodes.OPPONENT_MOVE)) {
 
 					lblStatus.setText("Status: Opponent moved. Your turn..");
 					myTurn.setIcon(turnIcon);
@@ -431,18 +434,18 @@ public class GUI extends JFrame {
 
 				}
 				// not your turn
-				else if (OptionCode.equals("NOTTRN")) {
+				else if (OptionCode.equals(ServerToClientStatusCodes.NOT_YOUR_TURN)) {
 					lblStatus.setText("Status: Not your turn, waiting for opponent to move..");
 				}
 				// opponent request to move back
-				else if (OptionCode.equals("OPPREQ")) {
+				else if (OptionCode.equals(ServerToClientStatusCodes.OPPONENT_REQUEST_MOVE_BACK)) {
 					int response = JOptionPane.showConfirmDialog(this, "Opponent requests to move back 1 step",
 							"Tic Tac Toe ", JOptionPane.YES_NO_OPTION);
 
 					if (JOptionPane.YES_OPTION == response)
-						toServer.println("REQRES YES");
+						toServer.println(ClientToServerStatusCode.MOVE_BACK_ALLOWED);
 					else
-						toServer.println("REQRES NO");
+						toServer.println(ClientToServerStatusCode.MOVE_BACK_DENIED);
 				}
 				// receive request response
 				else if (OptionCode.equals("REQRES")) {
@@ -490,12 +493,12 @@ public class GUI extends JFrame {
 
 				}
 
-				else if (OptionCode.equals("OPDEAD")) {
+				else if (OptionCode.equals(ServerToClientStatusCodes.OPPONENT_DISCONNECTED)) {
 					lblStatus.setText("Status: Opponent has disconnected. Game stopped.");
 					showErrMessageDialog("Status: Opponent has disconnected. Game stopped.", "TicTacToe Error Message");
 					gameOver = true;
 
-				} else if (OptionCode.equals("YOUWIN")) {
+				} else if (OptionCode.equals(ServerToClientStatusCodes.GAME_WON)) {
 					lblStatus.setText("Status: You Win!!!");
 					gameResult = "WIN";
 
@@ -506,7 +509,7 @@ public class GUI extends JFrame {
 
 					gameOver = true;
 
-				} else if (OptionCode.equals("YOULSE")) {
+				} else if (OptionCode.equals(ServerToClientStatusCodes.YOU_LOSE)) {
 					lblStatus.setText("Status: You Lose..");
 					gameResult = "LOS";
 
@@ -517,7 +520,7 @@ public class GUI extends JFrame {
 
 					gameOver = true;
 
-				} else if (OptionCode.equals("GAMTIE")) {
+				} else if (OptionCode.equals(ServerToClientStatusCodes.GAME_TIE)) {
 					lblStatus.setText("Status: Game Tie.");
 					gameResult = "TIE";
 
@@ -531,7 +534,7 @@ public class GUI extends JFrame {
 			}
 
 			// call player thread to stop
-			toServer.println("GMQUIT");
+			toServer.println(ClientToServerStatusCode.GAME_QUIT);
 
 		} catch (IOException e) {
 			System.err.println("SYSTEM MSG: Server down! Game stopped.");
