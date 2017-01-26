@@ -6,6 +6,11 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 
+/**
+ * Handles client operations
+ * @author dimcho
+ *
+ */
 public class WorkerThread extends Thread {
 	private WorkerThread opponent;
 	private PrintWriter toClient = null;
@@ -70,13 +75,11 @@ public class WorkerThread extends Thread {
 
 				if (statusCode.equals("MOVETO")) {
 
-					// the player who move first will be set as
-					// currentplayer
+					// The first player that moves will be set as the current player
 					if (game.getCurrentPlayer() == null)
 						game.setCurrentPlayer(this);
 
-					// client wants to move, so go to the game to
-					// validate that move
+					// Validate the move when a client makes a move
 					if (game.validateMove(this, Integer.parseInt(param)) == Game.VALID_MOVE) {
 						toClient.println("MOVEOK " + param);
 
@@ -92,24 +95,21 @@ public class WorkerThread extends Thread {
 
 				} else if (statusCode.equals("MYNAME")) {
 
-					if (game.ValidateName(this, param) == true)
+					if (game.validateName(this, param) == true)
 						toClient.println("MYNAME " +" " + param);
 					else
 						toClient.println("NAMENK");
 
 				}
-				// request move back
+				// Requests a move back
 				else if (statusCode.equals("MOVEBK")) {
 					game.validateOneMoveBack(this);
 				}
-				// response to move back request
+				// Listen for response from move back request
 				else if (statusCode.equals("REQRES")) {
-					game.AnnounceMoveBack(param, this);
+					game.announceMoveBack(param, this);
 				}
-				// when playerhelper catch the exception that a player
-				// has disconnected,
-				// it will tell the opponent of this player that his
-				// opponent has disconnected
+				// If a player disconnects a message will be printed
 				else if (statusCode.equals("GMQUIT")) {
 					System.out.println("SYSTEM MSG: Player " + (myName == null ? "No Name" : myName)
 							+ " has disconnected, game stopped.");
@@ -140,7 +140,7 @@ public class WorkerThread extends Thread {
 	}
 
 	public void recordOpponentMove(int location) {
-		// call this player to record opponent move
+		// Record opponent move
 		toClient.println("OPPMOV " + location);
 
 		if (game.checkForWinner())
@@ -168,20 +168,25 @@ public class WorkerThread extends Thread {
 		toClient.println("OPPNAM " + inputName);
 	}
 
-	// other side request to move back
+	/**
+	 * Requests one move back from the other player
+	 */
 	public void requestMoveBack() {
 		toClient.println("OPPREQ");
 	}
 
-	// announce result of moveback request
-	// requester is the player who make the request to move back
-	// location is the square that needs to be removed
-	public void MoveBack(String requester, int loc) {
-		if (loc == -1)
-			// not authorize
-			toClient.println("REQRES NK " + "0" + requester);
+	/**
+	 * Checks the result from the move back request
+	 * 
+	 * @param moveBackRequestSender the sender of the request
+	 * @param squareLocToRemove the location on the board to reset
+	 */
+	public void moveBack(String moveBackRequestSender, int squareLocToRemove) {
+		if (squareLocToRemove == -1)
+			
+			toClient.println("REQRES NK " + "0" + moveBackRequestSender);
 		else
-			toClient.println("REQRES OK " + loc + requester);
+			toClient.println("REQRES OK " + squareLocToRemove + moveBackRequestSender);
 
 	}
 

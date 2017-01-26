@@ -1,243 +1,273 @@
 package org.dmdev.serverside;
 
-	public class Game {
-		private WorkerThread PHelper1 = null;
-		private WorkerThread PHelper2 = null;
+/**
+ * Handles game related operations like adding players, validating moves, check
+ * for winner
+ * @author dimcho
+ */
+public class Game {
 
-		private WorkerThread currentPlayer = null;
-		private InputSquare board[]; // game board
+	private WorkerThread currentPlayer = null;
+	private InputSquare board[];
 
-		public static final int VALID_MOVE = 1;
-		public static final int INVALID_MOVE = 2;
-		public static final int NOT_YOUR_TURN = 3;
+	private WorkerThread firstWorker = null;
+	private WorkerThread secondWorker = null;
 
-		private int NoOfMove = 0;
+	public static final int VALID_MOVE = 1;
+	public static final int INVALID_MOVE = 2;
+	public static final int NOT_YOUR_TURN = 3;
 
-		public Game() {
+	private int moveCnt = 0;
 
-			board = new InputSquare[9];
-			for (int i = 0; i < 9; i++)
-				board[i] = new InputSquare();
+	public Game() {
+		// Crates new InputSquares to create the board
+		board = new InputSquare[9];
+		for (int i = 0; i < 9; i++)
+			board[i] = new InputSquare();
+	}
 
-		}
+	/**
+	 * Add the player with its worker thread
+	 * 
+	 * @param player
+	 *            the player to add
+	 */
+	public void addPlayer(WorkerThread player) {
+		if (firstWorker == null)
+			firstWorker = player;
+		else
+			secondWorker = player;
+	}
 
-		public void AddPlayer(WorkerThread player) {
-			if (PHelper1 == null)
-				PHelper1 = player;
-			else
-				PHelper2 = player;
-		}
+	public boolean hasEnoughPlayers() {
+		return ((firstWorker != null) && (secondWorker != null));
+	}
 
-		public void setOpponent() {
-			PHelper1.setOpponent(PHelper2);
-			PHelper2.setOpponent(PHelper1);
+	/**
+	 * Sets the opponent for both players
+	 */
+	public void setOpponent() {
+		firstWorker.setOpponent(secondWorker);
+		secondWorker.setOpponent(firstWorker);
 
-		}
+	}
 
-		public boolean hasEnoughPlayers() {
-			return ((PHelper1 != null) && (PHelper2 != null));
-		}
+	public WorkerThread getFirstPlayer() {
+		return firstWorker;
 
-		public WorkerThread getFirstPlayer() {
-			return PHelper1;
+	}
 
-		}
+	public WorkerThread getSecondPlayer() {
+		return secondWorker;
+	}
 
-		public WorkerThread getSecondPlayer() {
-			return PHelper2;
-		}
+	public WorkerThread getCurrentPlayer() {
+		return currentPlayer;
+	}
 
-		// both players own the game object, so we use this as the
-		// monitor
-		public synchronized int validateMove(WorkerThread player, int location) {
+	/**
+	 * Sets the current player to move
+	 * 
+	 * @param player
+	 *            the player which to set for current
+	 */
+	public synchronized void setCurrentPlayer(WorkerThread player) {
+		if (currentPlayer == null)
+			currentPlayer = player;
+	}
 
-			int ReturnValue = INVALID_MOVE;
+	/**
+	 * Sets the current player when a move back is made
+	 * 
+	 * @param player
+	 */
+	public void superSetCurrentPlayer(WorkerThread player) {
+		currentPlayer = player;
+	}
 
-			try {
+	// Since both the workers access the game object, this method is used as the
+	// monitor
+	/**
+	 * Validates a players move and checks for probable winners
+	 * 
+	 * @param player
+	 * @param location
+	 * @return the status
+	 */
+	public synchronized int validateMove(WorkerThread player, int location) {
 
-				if (player == currentPlayer) {
+		int returnStaus = INVALID_MOVE;
 
-					// if nobody choose that location
-					if (board[location].player == null) {
+		try {
 
-						// assign board location and move order
-						board[location].player = player;
-						board[location].MoveOrder = NoOfMove++;
+			if (player == currentPlayer) {
+				if (board[location].player == null) {
 
-						// set new current player
-						currentPlayer = player.getOpponent();
+					// Assigns the board location the player who clicked it
+					board[location].player = player;
+					board[location].moveNumber = moveCnt++;
 
-						// call current player to record opponent move first
-						// (the one
-						// we have just processed above) before he moves
-						currentPlayer.recordOpponentMove(location);
+					// Sets the opponent as the current player
+					currentPlayer = player.getOpponent();
 
-						// notify the other waiting player he can move now
-						ReturnValue = VALID_MOVE;
+					// Record the previous current player's move
+					currentPlayer.recordOpponentMove(location);
 
-					} else
-						ReturnValue = INVALID_MOVE;
+					// Notify the other waiting player that it's his turn
+					returnStaus = VALID_MOVE;
+
 				} else
-					// not his turn
-					ReturnValue = NOT_YOUR_TURN;
-
-			} catch (Exception e) {
-				System.out.println("SYSTEM MSG: Error when validating move.");
-				e.printStackTrace();
-			}
-
-			return ReturnValue;
-
-		}
-
-		// validate name when user press submit
-		public synchronized boolean ValidateName(WorkerThread Player, String InputName) {
-
-			if (Player.getOpponent().getPlayerName() == null || !Player.getOpponent().getPlayerName().equals(InputName)) {
-
-				Player.setPlayerName(InputName);
-        
-  			Player.getOpponent().saveOpponentName(InputName);
-
-				return true;
+					returnStaus = INVALID_MOVE;
 			} else
-				return false;
+				// Return status not your turn
+				returnStaus = NOT_YOUR_TURN;
 
+		} catch (Exception e) {
+			System.out.println("SYSTEM MSG: Error when validating move.");
+			e.printStackTrace();
 		}
 
-		// send a move back request to the opponent
-		public synchronized void validateOneMoveBack(WorkerThread Player) {
-			Player.getOpponent().requestMoveBack();
+		return returnStaus;
 
-		}
+	}
 
-		// once the opponent response to the move back request(either deny
-		// or confirm)
-		// game will announce the move back decision
-		// ResponsePlayer is the player who authorize the other to move back
-		public synchronized void AnnounceMoveBack(String Result, WorkerThread ResponsePlayer) {
-			int XLastMove, OLastMove;
+	/**
+	 * Validates the palyer's name. Checks the if the opponent's name is the
+	 * same
+	 * 
+	 * @param player
+	 * @param inputName
+	 * @return
+	 */
+	public synchronized boolean validateName(WorkerThread player, String inputName) {
 
-			if (Result.equals("YES")) {
-				// ok to move back
+		if (player.getOpponent().getPlayerName() == null || !player.getOpponent().getPlayerName().equals(inputName)) {
 
-				// case 1: X move 1 step, O move 1 step,
-				// X make the request in his turn and O authorize it
-				if (currentPlayer == ResponsePlayer.getOpponent()) {
+			player.setPlayerName(inputName);
+			player.getOpponent().saveOpponentName(inputName);
 
-					// modify server board
-					// remove O's last move
-					OLastMove = GetPlayerLastMove(currentPlayer.getOpponent());
-					RemoveMove(OLastMove);
+			return true;
+		} else
+			return false;
 
-					// remove X's last move
-					XLastMove = GetPlayerLastMove(currentPlayer);
-					RemoveMove(XLastMove);
+	}
 
-					// modify client's board
-					// do this again in client's program
-					// return the name of the requester
-					currentPlayer.getOpponent().MoveBack(ResponsePlayer.getOpponent().getPlayerName(), OLastMove);
-					currentPlayer.getOpponent().MoveBack(ResponsePlayer.getOpponent().getPlayerName(), XLastMove);
+	// Send a move back request to the opponent
+	public synchronized void validateOneMoveBack(WorkerThread Player) {
+		Player.getOpponent().requestMoveBack();
 
-					currentPlayer.MoveBack(ResponsePlayer.getOpponent().getPlayerName(), OLastMove);
-					currentPlayer.MoveBack(ResponsePlayer.getOpponent().getPlayerName(), XLastMove);
+	}
 
-					// current player remains currentplayer
+	/**
+	 * Announce the result of the move back request
+	 * 
+	 * @param result
+	 *            the result of the request
+	 * @param authorizedPlayer
+	 *            the other player which is playing
+	 */
+	public synchronized void announceMoveBack(String result, WorkerThread authorizedPlayer) {
+		int xLastMove, oLastMove;
 
-				} else
-				// case 2: X move 1 step, O is making decision, X request to
-				// move back
-				// and O authorize it
-				{
+		// If the result is YES move back
+		if (result.equals("YES")) {
+			if (currentPlayer == authorizedPlayer.getOpponent()) {
 
-					// modify server board
-					// remove X's last move
-					XLastMove = GetPlayerLastMove(currentPlayer.getOpponent());
-					RemoveMove(XLastMove);
+				// Remove the move from the board object and remove the last
+				// move
+				oLastMove = getPlayerLastMove(currentPlayer.getOpponent());
+				removeMove(oLastMove);
 
-					// modify client's board
-					// return the name of the requester
-					currentPlayer.getOpponent().MoveBack(ResponsePlayer.getOpponent().getPlayerName(), XLastMove);
-					currentPlayer.MoveBack(ResponsePlayer.getOpponent().getPlayerName(), XLastMove);
+				// Remove the move from the board object and remove the last
+				// move
+				xLastMove = getPlayerLastMove(currentPlayer);
+				removeMove(xLastMove);
 
-					// currentplayer change back to X
-					SuperSetCurrentPlayer(currentPlayer.getOpponent());
-				}
+				// Update the client's GUI
+				currentPlayer.getOpponent().moveBack(authorizedPlayer.getOpponent().getPlayerName(), oLastMove);
+				currentPlayer.getOpponent().moveBack(authorizedPlayer.getOpponent().getPlayerName(), xLastMove);
+
+				currentPlayer.moveBack(authorizedPlayer.getOpponent().getPlayerName(), oLastMove);
+				currentPlayer.moveBack(authorizedPlayer.getOpponent().getPlayerName(), xLastMove);
 
 			} else {
 
-				// -1 means request not authorize
-				currentPlayer.MoveBack(ResponsePlayer.getOpponent().getPlayerName(), -1);
-				currentPlayer.getOpponent().MoveBack(ResponsePlayer.getOpponent().getPlayerName(), -1);
+				xLastMove = getPlayerLastMove(currentPlayer.getOpponent());
+				removeMove(xLastMove);
+
+				currentPlayer.getOpponent().moveBack(authorizedPlayer.getOpponent().getPlayerName(), xLastMove);
+				currentPlayer.moveBack(authorizedPlayer.getOpponent().getPlayerName(), xLastMove);
+
+				superSetCurrentPlayer(currentPlayer.getOpponent());
 			}
 
-		}
+		} else {
 
-		// delete a move from the game board
-		public void RemoveMove(int Location) {
-			board[Location].player = null;
-			board[Location].MoveOrder = -1;
-
-			NoOfMove--;
-		}
-
-		// get the last move of player from history
-		public int GetPlayerLastMove(WorkerThread Player) {
-			int MaxMoveOrder = -1;
-			int LastMove = -1;
-
-			for (int i = 0; i < 9; i++) {
-				if (board[i].player == Player) {
-
-					if (board[i].MoveOrder > MaxMoveOrder) {
-						MaxMoveOrder = board[i].MoveOrder;
-						LastMove = i;
-					}
-
-				}
-			}
-
-			return LastMove;
-
-		}
-
-		public WorkerThread getCurrentPlayer() {
-			return currentPlayer;
-		}
-
-		public synchronized void setCurrentPlayer(WorkerThread Player) {
-			if (currentPlayer == null)
-				currentPlayer = Player;
-		}
-
-		public void SuperSetCurrentPlayer(WorkerThread Player) {
-			// use in requesting move back 1 step
-
-			currentPlayer = Player;
-		}
-
-		public boolean checkForWinner() {
-			// check the owner of each box to see the winner
-			return new WinnerChecker(board).checkAll();
-		}
-
-		// check whether game is tie
-		public boolean isGameTie() {
-			boolean BoardIsFull = true;
-
-			for (int i = 0; i < 9; i++) {
-				// if one of the board is null, then not full -> not tie
-				if (board[i].player == null)
-					BoardIsFull = false;
-			}
-
-			// if board is full but still no winner, then tie
-			if ((BoardIsFull) && (checkForWinner() == false))
-				return true;
-			else
-				return false;
-
+			// If result is -1 the move back was not authorized
+			currentPlayer.moveBack(authorizedPlayer.getOpponent().getPlayerName(), -1);
+			currentPlayer.getOpponent().moveBack(authorizedPlayer.getOpponent().getPlayerName(), -1);
 		}
 
 	}
+
+	public boolean checkForWinner() {
+		return new WinnerChecker(board).checkAll();
+	}
+
+	public boolean isGameTie() {
+		boolean boardIsFull = true;
+
+		for (int i = 0; i < 9; i++) {
+			// if one of the board is null, then not full -> not tie
+			if (board[i].player == null)
+				boardIsFull = false;
+		}
+
+		// if board is full but still no winner, then tie
+		if ((boardIsFull) && (checkForWinner() == false))
+			return true;
+		else
+			return false;
+
+	}
+
+	/**
+	 * Removes a move from the board
+	 * 
+	 * @param location
+	 *            the location of the square on the board
+	 */
+	public void removeMove(int location) {
+		board[location].player = null;
+		board[location].moveNumber = -1;
+
+		moveCnt--;
+	}
+
+	/**
+	 * Gets the players previous move from the Statistics.
+	 * 
+	 * @param player
+	 *            the player for which to get the last move
+	 * @return the player's last move
+	 */
+	public int getPlayerLastMove(WorkerThread player) {
+		int MaxMoveOrder = -1;
+		int lastMove = -1;
+
+		for (int i = 0; i < 9; i++) {
+			if (board[i].player == player) {
+
+				if (board[i].moveNumber > MaxMoveOrder) {
+					MaxMoveOrder = board[i].moveNumber;
+					lastMove = i;
+				}
+
+			}
+		}
+
+		return lastMove;
+
+	}
+
+}

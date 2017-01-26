@@ -4,9 +4,14 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 
+/**
+ * Handles incoming connections
+ * @author dimcho
+ *
+ */
 public class Server {
 
-	private Game game = new Game();
+	private Game game;
 	private ServerSocket serverSocket;
 	private static final int LISTEN_PORT = 1357;
 	private final char[] signs = { 'x', 'o' };
@@ -25,33 +30,21 @@ public class Server {
 		try {
 			int signNum = 0;
 			Socket player = null;
+			game = new Game();
+			
 			System.out.println("Listening on port " + LISTEN_PORT + "...");
 			while (!game.hasEnoughPlayers()) {
 				player = waitForPlayers();
-				// Every client's game is handled by the PlayerHelper thread
+				// Every client's game is handled by the WorkerThread
 				// The first player gets the x
-				WorkerThread pHelper = new WorkerThread(game, signs[signNum++], player);
-				game.AddPlayer(pHelper);
+				WorkerThread worker = new WorkerThread(game, signs[signNum++], player);
+				game.addPlayer(worker);
 
-				pHelper.start();
+				worker.start();
 			}
 			
 			game.setOpponent();
 
-			// // Every client's game is handled by the PlayerHelper thread
-			// // The first player gets the x
-			// game.AddPlayer(new PlayerHelper(game, 'x', waitForPlayers()));
-			// game.AddPlayer(new PlayerHelper(game, 'o', waitForPlayers()));
-			//
-			// if (game.hasEnoughPlayers()) {
-			//
-			// game.setOpponent();
-			// game.getFirstPlayer().start();
-			// game.getSecondPlayer().start();
-			//
-			// // Start a new game if there is no more room
-			// game = new Game();
-			// }
 		} finally {
 			try {
 				serverSocket.close();
