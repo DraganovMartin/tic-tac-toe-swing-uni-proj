@@ -329,7 +329,7 @@ public class GUI extends JFrame {
 	}
 
 	// client listen to server (WorkerThread) response
-	public void Play() throws Exception {
+	public void play() throws Exception {
 		String serverResponse = null;
 		String OptionCode = null;
 		String parameter = null;

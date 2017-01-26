@@ -27,7 +27,7 @@ public class TicTacToe extends Thread {
 			try {
 				while (true) {
 					GUI gui = new GUI(targetIp, statistics, name);
-					gui.Play();
+					gui.play();
 
 					// if play again, playing history will be cleared,
 					// dispose old interface and start again
@@ -91,7 +91,7 @@ public class TicTacToe extends Thread {
 
 				while (true) {
 					GUI gui = new GUI("127.0.0.1", statistics, name);
-					gui.Play();
+					gui.play();
 
 					// get the game result first no matter the player continues
 					// to play or not
@@ -137,8 +137,10 @@ public class TicTacToe extends Thread {
 			System.out.println("Aborting !!!");
 			System.exit(2);
 		}
-		System.out.println("Start client (Y/N) : ");
+		Thread.sleep(100);
+		System.out.print("Start client (Y/N) : ");
 		answer = sc.nextLine();
+		System.out.println();
 
 		if (answer.equalsIgnoreCase("Y")) {
 			TicTacToe app = new TicTacToe("client", "localhost");

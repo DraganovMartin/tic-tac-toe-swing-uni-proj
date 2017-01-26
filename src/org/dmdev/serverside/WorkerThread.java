@@ -82,7 +82,7 @@ public class WorkerThread extends Thread {
 
 					// Validate the move when a client makes a move
 					if (game.validateMove(this, Integer.parseInt(param)) == Game.VALID_MOVE) {
-						toClient.println(ServerToClientStatusCodes.MOVE_ACCEPTED +" "+param);
+						toClient.println(ServerToClientStatusCodes.MOVE_ACCEPTED + " " + param);
 
 						if (game.checkForWinner())
 							toClient.println(ServerToClientStatusCodes.GAME_WON);
@@ -182,13 +182,12 @@ public class WorkerThread extends Thread {
 	 * @param moveBackRequestSender the sender of the request
 	 * @param squareLocToRemove the location on the board to reset
 	 */
-	public void moveBack(String moveBackRequestSender, int loc) {
-		if (loc == -1)
+	public void moveBack(String moveBackRequestSender, int squareLocToRemove) {
+		if (squareLocToRemove == -1)
 			// not authorize
 			toClient.println(ServerToClientStatusCodes.REQUEST_RESULT_NOT_OK+" " + "0" + moveBackRequestSender);
 		else
-			toClient.println(ServerToClientStatusCodes.REQUEST_RESULT_OK+" " + loc + moveBackRequestSender);
-
+			toClient.println(ServerToClientStatusCodes.REQUEST_RESULT_OK+" " + squareLocToRemove + moveBackRequestSender);
 	}
 
 }
