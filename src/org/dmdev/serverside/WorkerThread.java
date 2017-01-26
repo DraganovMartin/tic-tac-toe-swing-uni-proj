@@ -97,7 +97,7 @@ public class WorkerThread extends Thread {
 				} else if (statusCode.equals(ServerToClientStatusCodes.CLIENT_NAME)) {
 
 					if (game.validateName(this, param))
-						toClient.println(ServerToClientStatusCodes.NAME_OKEY +"  " + param);
+						toClient.println(ServerToClientStatusCodes.NAME_OKEY +" " + param);
 					else
 						toClient.println(ServerToClientStatusCodes.NAME_NOT_OKEY);
 
@@ -188,7 +188,6 @@ public class WorkerThread extends Thread {
 			toClient.println(ServerToClientStatusCodes.REQUEST_RESULT_NOT_OK+" " + "0" + moveBackRequestSender);
 		else
 			toClient.println(ServerToClientStatusCodes.REQUEST_RESULT_OK+" " + squareLocToRemove + moveBackRequestSender);
-
 	}
 
 }
