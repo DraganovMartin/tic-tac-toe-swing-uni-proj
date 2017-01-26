@@ -28,7 +28,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
-import org.dmdev.serverside.ClientStatus;
+import org.dmdev.serverside.ServerToClientStatusCodes;
 
 public class GUI extends JFrame {
 	private static final long serialVersionUID = -6713206219193321399L;
@@ -342,17 +342,17 @@ public class GUI extends JFrame {
 					parameter = serverResponse.substring(serverResponse.indexOf(' ')).trim();
 				}
 
-				if (OptionCode.equals(ClientStatus.CLIENT_CONNECTED)) {
+				if (OptionCode.equals(ServerToClientStatusCodes.CLIENT_CONNECTED)) {
 					lblStatus.setText("Status: You are online, please wait for your opponent...");
 
 				}
 				// opponent has arrived
-				else if (OptionCode.equals(ClientStatus.OPPONENT_CONNECTED)) {
+				else if (OptionCode.equals(ServerToClientStatusCodes.OPPONENT_CONNECTED)) {
 					lblStatus.setText("Status: Another player has connected, please submit your name to start the game");
 					oppArrived = true;
 				}
 				// your sign
-				else if (OptionCode.equals(ClientStatus.PLAYER_SIGN)) {
+				else if (OptionCode.equals(ServerToClientStatusCodes.PLAYER_SIGN)) {
 
 					sign = parameter;
 

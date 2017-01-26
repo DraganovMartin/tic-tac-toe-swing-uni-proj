@@ -1,9 +1,9 @@
 package org.dmdev.serverside;
 
-import org.dmdev.serverside.PlayerHelper;
+import org.dmdev.serverside.WorkerThread;
 
 public class InputSquare {
-	public PlayerHelper player = null;
+	public WorkerThread player = null;
 	public char sign;
 	public int MoveOrder = -1;
 }

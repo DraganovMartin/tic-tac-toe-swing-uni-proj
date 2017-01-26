@@ -1,10 +1,10 @@
 package org.dmdev.serverside;
 
 	public class Game {
-		private PlayerHelper PHelper1 = null;
-		private PlayerHelper PHelper2 = null;
+		private WorkerThread PHelper1 = null;
+		private WorkerThread PHelper2 = null;
 
-		private PlayerHelper currentPlayer = null;
+		private WorkerThread currentPlayer = null;
 		private InputSquare board[]; // game board
 
 		public static final int VALID_MOVE = 1;
@@ -21,7 +21,7 @@ package org.dmdev.serverside;
 
 		}
 
-		public void AddPlayer(PlayerHelper player) {
+		public void AddPlayer(WorkerThread player) {
 			if (PHelper1 == null)
 				PHelper1 = player;
 			else
@@ -29,8 +29,8 @@ package org.dmdev.serverside;
 		}
 
 		public void setOpponent() {
-			PHelper1.SetOpponent(PHelper2);
-			PHelper2.SetOpponent(PHelper1);
+			PHelper1.setOpponent(PHelper2);
+			PHelper2.setOpponent(PHelper1);
 
 		}
 
@@ -38,18 +38,18 @@ package org.dmdev.serverside;
 			return ((PHelper1 != null) && (PHelper2 != null));
 		}
 
-		public PlayerHelper getFirstPlayer() {
+		public WorkerThread getFirstPlayer() {
 			return PHelper1;
 
 		}
 
-		public PlayerHelper getSecondPlayer() {
+		public WorkerThread getSecondPlayer() {
 			return PHelper2;
 		}
 
 		// both players own the game object, so we use this as the
 		// monitor
-		public synchronized int ValidateMove(PlayerHelper player, int location) {
+		public synchronized int validateMove(WorkerThread player, int location) {
 
 			int ReturnValue = INVALID_MOVE;
 
@@ -70,7 +70,7 @@ package org.dmdev.serverside;
 						// call current player to record opponent move first
 						// (the one
 						// we have just processed above) before he moves
-						currentPlayer.RecordOpponentMove(location);
+						currentPlayer.recordOpponentMove(location);
 
 						// notify the other waiting player he can move now
 						ReturnValue = VALID_MOVE;
@@ -91,13 +91,13 @@ package org.dmdev.serverside;
 		}
 
 		// validate name when user press submit
-		public synchronized boolean ValidateName(PlayerHelper Player, String InputName) {
+		public synchronized boolean ValidateName(WorkerThread Player, String InputName) {
 
-			if (Player.getOpponent().GetName() == null || !Player.getOpponent().GetName().equals(InputName)) {
+			if (Player.getOpponent().getPlayerName() == null || !Player.getOpponent().getPlayerName().equals(InputName)) {
 
 				Player.setPlayerName(InputName);
         
-  			Player.getOpponent().RecordOpponentName(InputName);
+  			Player.getOpponent().saveOpponentName(InputName);
 
 				return true;
 			} else
@@ -106,8 +106,8 @@ package org.dmdev.serverside;
 		}
 
 		// send a move back request to the opponent
-		public synchronized void ValidateMoveBack(PlayerHelper Player) {
-			Player.getOpponent().RequestMoveBack();
+		public synchronized void validateOneMoveBack(WorkerThread Player) {
+			Player.getOpponent().requestMoveBack();
 
 		}
 
@@ -115,7 +115,7 @@ package org.dmdev.serverside;
 		// or confirm)
 		// game will announce the move back decision
 		// ResponsePlayer is the player who authorize the other to move back
-		public synchronized void AnnounceMoveBack(String Result, PlayerHelper ResponsePlayer) {
+		public synchronized void AnnounceMoveBack(String Result, WorkerThread ResponsePlayer) {
 			int XLastMove, OLastMove;
 
 			if (Result.equals("YES")) {
@@ -137,11 +137,11 @@ package org.dmdev.serverside;
 					// modify client's board
 					// do this again in client's program
 					// return the name of the requester
-					currentPlayer.getOpponent().MoveBack(ResponsePlayer.getOpponent().GetName(), OLastMove);
-					currentPlayer.getOpponent().MoveBack(ResponsePlayer.getOpponent().GetName(), XLastMove);
+					currentPlayer.getOpponent().MoveBack(ResponsePlayer.getOpponent().getPlayerName(), OLastMove);
+					currentPlayer.getOpponent().MoveBack(ResponsePlayer.getOpponent().getPlayerName(), XLastMove);
 
-					currentPlayer.MoveBack(ResponsePlayer.getOpponent().GetName(), OLastMove);
-					currentPlayer.MoveBack(ResponsePlayer.getOpponent().GetName(), XLastMove);
+					currentPlayer.MoveBack(ResponsePlayer.getOpponent().getPlayerName(), OLastMove);
+					currentPlayer.MoveBack(ResponsePlayer.getOpponent().getPlayerName(), XLastMove);
 
 					// current player remains currentplayer
 
@@ -158,8 +158,8 @@ package org.dmdev.serverside;
 
 					// modify client's board
 					// return the name of the requester
-					currentPlayer.getOpponent().MoveBack(ResponsePlayer.getOpponent().GetName(), XLastMove);
-					currentPlayer.MoveBack(ResponsePlayer.getOpponent().GetName(), XLastMove);
+					currentPlayer.getOpponent().MoveBack(ResponsePlayer.getOpponent().getPlayerName(), XLastMove);
+					currentPlayer.MoveBack(ResponsePlayer.getOpponent().getPlayerName(), XLastMove);
 
 					// currentplayer change back to X
 					SuperSetCurrentPlayer(currentPlayer.getOpponent());
@@ -168,8 +168,8 @@ package org.dmdev.serverside;
 			} else {
 
 				// -1 means request not authorize
-				currentPlayer.MoveBack(ResponsePlayer.getOpponent().GetName(), -1);
-				currentPlayer.getOpponent().MoveBack(ResponsePlayer.getOpponent().GetName(), -1);
+				currentPlayer.MoveBack(ResponsePlayer.getOpponent().getPlayerName(), -1);
+				currentPlayer.getOpponent().MoveBack(ResponsePlayer.getOpponent().getPlayerName(), -1);
 			}
 
 		}
@@ -183,7 +183,7 @@ package org.dmdev.serverside;
 		}
 
 		// get the last move of player from history
-		public int GetPlayerLastMove(PlayerHelper Player) {
+		public int GetPlayerLastMove(WorkerThread Player) {
 			int MaxMoveOrder = -1;
 			int LastMove = -1;
 
@@ -202,16 +202,16 @@ package org.dmdev.serverside;
 
 		}
 
-		public PlayerHelper GetCurrentPlayer() {
+		public WorkerThread getCurrentPlayer() {
 			return currentPlayer;
 		}
 
-		public synchronized void SetCurrentPlayer(PlayerHelper Player) {
+		public synchronized void setCurrentPlayer(WorkerThread Player) {
 			if (currentPlayer == null)
 				currentPlayer = Player;
 		}
 
-		public void SuperSetCurrentPlayer(PlayerHelper Player) {
+		public void SuperSetCurrentPlayer(WorkerThread Player) {
 			// use in requesting move back 1 step
 
 			currentPlayer = Player;
@@ -223,7 +223,7 @@ package org.dmdev.serverside;
 		}
 
 		// check whether game is tie
-		public boolean Tie() {
+		public boolean isGameTie() {
 			boolean BoardIsFull = true;
 
 			for (int i = 0; i < 9; i++) {
