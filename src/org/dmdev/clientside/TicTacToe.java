@@ -69,7 +69,7 @@ public class TicTacToe extends Thread {
 				try {
 
 					serverReady = true;
-					Server server = new Server();
+					new Server();
 
 				} catch (Exception e) {
 					System.err.println("SYSTEM MSG: Exception when starting server: " + e.toString());
