@@ -17,7 +17,7 @@ public class WinnerChecker {
 	 * @return true if a winner was found false otherwise
 	 */
 	public boolean checkRows(){
-		for (int i = 0; i <3; i++) {
+		for (int i = 0; i <7; i+=3) {
 			if((board[i].player != null) && (board[i].player == board[i+1].player)
 					&& (board[i+1].player == board[i+2].player)){
 				return true;
@@ -47,9 +47,9 @@ public class WinnerChecker {
 	 * @return true if a winner was found false otherwise
 	 */
 	public boolean checkDiagonals(){
-		for (int i = 0; i <2; i++) {
+		for (int i = 0; i <3; i+=2) {
 			if((board[i].player != null) && (board[i].player == board[4].player)
-					&& (board[4].player == board[8-2*i].player)){
+					&& (board[4].player == board[8-i].player)){
 				return true;
 			}
 		}
